@@ -2,387 +2,490 @@ const map = L.map("map", {
   doubleClickZoom: false
 }).setView([52.9593, 5.9185], 12);
 
-
 L.tileLayer(
   "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
   {
     maxZoom: 19,
-    attribution: "&copy; OpenStreetMap"
+    attribution: "&copy; OpenStreetMap contributors"
   }
 ).addTo(map);
 
 
-let stickers = [];
+// ==========================
+// DATA
+// ==========================
 
+let stickers = [];
 let selectedLat = null;
 let selectedLng = null;
 
 
-// oude stickers laden
+// ==========================
+// STICKERS LADEN
+// ==========================
+
 const saved = localStorage.getItem("stickerkaart");
 
 if (saved) {
   try {
-    stickers = JSON.parse(saved);
-  } catch {
+    const parsed = JSON.parse(saved);
+
+    if (Array.isArray(parsed)) {
+      stickers = parsed;
+    }
+  } catch (error) {
+    console.error("Kon stickers niet laden:", error);
     stickers = [];
   }
 }
 
 
-// bestaande stickers tonen
-stickers.forEach(function(sticker){
+// ==========================
+// BESTAANDE STICKERS TONEN
+// ==========================
+
+stickers.forEach((sticker) => {
   createSticker(sticker);
 });
 
 updateCounter();
 
 
+// ==========================
+// PLAATSEN STARTEN
+// ==========================
 
-function startPlacement(){
+function startPlacement() {
+  const centerMarker = document.getElementById("centerMarker");
+  const placeBar = document.getElementById("placeBar");
 
-  document.getElementById("centerMarker").style.display="block";
+  if (centerMarker) {
+    centerMarker.style.display = "block";
+  }
 
-  document.getElementById("placeBar").style.display="block";
-
+  if (placeBar) {
+    placeBar.style.display = "block";
+  }
 }
 
 
+// ==========================
+// PLAATSEN ANNULEREN
+// ==========================
 
-function cancelPlacement(){
+function cancelPlacement() {
+  const centerMarker = document.getElementById("centerMarker");
+  const placeBar = document.getElementById("placeBar");
 
-  document.getElementById("centerMarker").style.display="none";
+  if (centerMarker) {
+    centerMarker.style.display = "none";
+  }
 
-  document.getElementById("placeBar").style.display="none";
-
+  if (placeBar) {
+    placeBar.style.display = "none";
+  }
 }
 
 
+// ==========================
+// LOCATIE KIEZEN
+// ==========================
 
-function chooseLocation(){
-
-  let center = map.getCenter();
+function chooseLocation() {
+  const center = map.getCenter();
 
   selectedLat = center.lat;
   selectedLng = center.lng;
 
+  document.getElementById("centerMarker").style.display = "none";
+  document.getElementById("placeBar").style.display = "none";
 
-  document.getElementById("centerMarker").style.display="none";
+  document.getElementById("modalBackground").style.display = "block";
+  document.getElementById("modal").style.display = "block";
 
-  document.getElementById("placeBar").style.display="none";
+  // Cursor meteen in tekstveld
+  const input = document.getElementById("stickerText");
 
-
-  document.getElementById("modalBackground").style.display="block";
-
-  document.getElementById("modal").style.display="block";
-
+  if (input) {
+    input.value = "";
+    setTimeout(() => input.focus(), 100);
+  }
 }
 
 
+// ==========================
+// STICKER PUBLICEREN
+// ==========================
 
-async function publishSticker(){
+async function publishSticker() {
+  const input = document.getElementById("stickerText");
+  const text = input ? input.value.trim() : "";
+
+  if (!text) {
+    alert("Vul tekst in.");
+    return;
+  }
+
+  if (selectedLat === null || selectedLng === null) {
+    alert("Kies eerst een plek.");
+    return;
+  }
 
 
-const text =
-document.getElementById("stickerText").value.trim();
+  // ========================
+  // OPSLAAN-ANIMATIE
+  // ========================
+
+  document.getElementById("saveOverlay").style.display = "flex";
+
+  document.getElementById("loadingCircle").style.display = "block";
+  document.getElementById("saveTitle").style.display = "block";
+  document.getElementById("saveSub").style.display = "block";
+
+  document.getElementById("successIcon").style.display = "none";
+  document.getElementById("successTitle").style.display = "none";
+  document.getElementById("successSub").style.display = "none";
 
 
-if(!text){
+  // ========================
+  // NIEUWE STICKER
+  // ========================
 
-alert("Vul tekst in");
+  const sticker = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    text: text,
+    lat: Number(selectedLat),
+    lng: Number(selectedLng),
+    created: new Date().toISOString()
+  };
 
-return;
 
+  // Simpele laadanimatie
+  await new Promise((resolve) => {
+    setTimeout(resolve, 1500);
+  });
+
+
+  // ========================
+  // OPSLAAN
+  // ========================
+
+  stickers.push(sticker);
+
+  try {
+    localStorage.setItem(
+      "stickerkaart",
+      JSON.stringify(stickers)
+    );
+  } catch (error) {
+    console.error("Opslaan mislukt:", error);
+
+    alert("De sticker kon niet worden opgeslagen.");
+
+    document.getElementById("saveOverlay").style.display = "none";
+
+    return;
+  }
+
+
+  // ========================
+  // TONEN OP KAART
+  // ========================
+
+  createSticker(sticker);
+  updateCounter();
+
+
+  // ========================
+  // SUCCES
+  // ========================
+
+  document.getElementById("loadingCircle").style.display = "none";
+  document.getElementById("saveTitle").style.display = "none";
+  document.getElementById("saveSub").style.display = "none";
+
+  document.getElementById("successIcon").style.display = "block";
+  document.getElementById("successTitle").style.display = "block";
+  document.getElementById("successSub").style.display = "block";
+
+
+  await new Promise((resolve) => {
+    setTimeout(resolve, 1500);
+  });
+
+
+  document.getElementById("saveOverlay").style.display = "none";
+
+  closeModal();
+
+  showNotification();
 }
 
 
+// ==========================
+// STICKER MAKEN
+// ==========================
 
-if(selectedLat===null){
+function createSticker(sticker) {
+  // Controleer of de data geldig is
+  if (
+    !sticker ||
+    typeof sticker.lat !== "number" ||
+    typeof sticker.lng !== "number" ||
+    typeof sticker.text !== "string"
+  ) {
+    console.warn("Ongeldige sticker overgeslagen:", sticker);
+    return;
+  }
 
-alert("Kies eerst plek");
 
-return;
+  const icon = L.divIcon({
+    className: "",
+    html: `
+      <div class="sticker">
+        ${escapeHtml(sticker.text)}
+      </div>
+    `,
+    iconSize: [62, 62],
+    iconAnchor: [31, 31]
+  });
 
+
+  const marker = L.marker(
+    [sticker.lat, sticker.lng],
+    {
+      icon: icon
+    }
+  ).addTo(map);
+
+
+  const date = sticker.created
+    ? new Date(sticker.created).toLocaleDateString("nl-NL")
+    : "Onbekend";
+
+
+  marker.bindPopup(`
+    <div class="sticker-popup">
+
+      <h3>🏷️ ${escapeHtml(sticker.text)}</h3>
+
+      <p>
+        📍 <strong>Locatie:</strong><br>
+        ${sticker.lat.toFixed(5)},
+        ${sticker.lng.toFixed(5)}
+      </p>
+
+      <p>
+        📅 ${escapeHtml(date)}
+      </p>
+
+      <button
+        class="delete"
+        type="button"
+        onclick="deleteSticker('${escapeHtml(sticker.id)}')"
+      >
+        🗑️ Verwijderen
+      </button>
+
+    </div>
+  `);
 }
 
 
+// ==========================
+// STICKER VERWIJDEREN
+// ==========================
 
-// animatie starten
+function deleteSticker(id) {
+  const confirmed = confirm(
+    "Weet je zeker dat je deze sticker wilt verwijderen?"
+  );
 
-document.getElementById("saveOverlay").style.display="flex";
-
-document.getElementById("loadingCircle").style.display="block";
-
-document.getElementById("saveTitle").style.display="block";
-
-document.getElementById("saveSub").style.display="block";
-
-document.getElementById("successIcon").style.display="none";
-
-document.getElementById("successTitle").style.display="none";
-
-document.getElementById("successSub").style.display="none";
+  if (!confirmed) {
+    return;
+  }
 
 
-
-// nieuwe sticker
-
-let sticker = {
-
-id: Date.now().toString(),
-
-text:text,
-
-lat:selectedLat,
-
-lng:selectedLng,
-
-created:new Date().toISOString()
-
-};
+  stickers = stickers.filter(
+    (sticker) => sticker.id !== id
+  );
 
 
-
-// wachten
-
-await new Promise(resolve=>setTimeout(resolve,5000));
-
-
-
-// toevoegen
-
-stickers.push(sticker);
+  localStorage.setItem(
+    "stickerkaart",
+    JSON.stringify(stickers)
+  );
 
 
-
-// ALLEEN gewone data opslaan
-
-localStorage.setItem(
-"stickerkaart",
-JSON.stringify(stickers)
-);
-
+  // Kaart opnieuw tekenen zonder volledige pagina-refresh
+  map.eachLayer((layer) => {
+    if (layer instanceof L.Marker) {
+      map.removeLayer(layer);
+    }
+  });
 
 
-// tonen
-
-createSticker(sticker);
-
-updateCounter();
+  stickers.forEach((sticker) => {
+    createSticker(sticker);
+  });
 
 
+  updateCounter();
 
-// succes animatie
-
-document.getElementById("loadingCircle").style.display="none";
-
-document.getElementById("saveTitle").style.display="none";
-
-document.getElementById("saveSub").style.display="none";
-
-
-document.getElementById("successIcon").style.display="block";
-
-document.getElementById("successTitle").style.display="block";
-
-document.getElementById("successSub").style.display="block";
-
-
-await new Promise(resolve=>setTimeout(resolve,2000));
-
-
-document.getElementById("saveOverlay").style.display="none";
-
-
-closeModal();
-
-
-showNotification();
-
-
+  showNotification();
 }
 
 
+// ==========================
+// TELLER
+// ==========================
 
+function updateCounter() {
+  const counter = document.getElementById("stickerCount");
 
-
-function createSticker(sticker){
-
-
-const icon = L.divIcon({
-
-className:"",
-
-html:
-`<div class="sticker">${escapeHtml(sticker.text)}</div>`,
-
-iconSize:[62,62],
-
-iconAnchor:[31,31]
-
-});
-
-
-
-let marker = L.marker(
-[
-sticker.lat,
-sticker.lng
-],
-{
-icon:icon
-}
-).addTo(map);
-
-
-
-let date =
-new Date(sticker.created)
-.toLocaleDateString("nl-NL");
-
-
-
-marker.bindPopup(`
-
-<h3>🏷️ ${escapeHtml(sticker.text)}</h3>
-
-📍 Locatie:<br>
-
-${sticker.lat.toFixed(5)},
-${sticker.lng.toFixed(5)}
-
-<br><br>
-
-📅 ${date}
-
-<br><br>
-
-<button class="delete"
-onclick="deleteSticker('${sticker.id}')">
-
-🗑️ Verwijderen
-
-</button>
-
-`);
-
+  if (counter) {
+    counter.textContent = stickers.length;
+  }
 }
 
 
+// ==========================
+// MODAL SLUITEN
+// ==========================
 
+function closeModal() {
+  document.getElementById("modal").style.display = "none";
+  document.getElementById("modalBackground").style.display = "none";
 
-function deleteSticker(id){
-
-
-stickers =
-stickers.filter(
-s=>s.id!==id
-);
-
-
-
-localStorage.setItem(
-"stickerkaart",
-JSON.stringify(stickers)
-);
-
-
-
-location.reload();
-
-
+  selectedLat = null;
+  selectedLng = null;
 }
 
 
+// ==========================
+// NOTIFICATIE
+// ==========================
+
+function showNotification() {
+  const notification =
+    document.getElementById("notification");
+
+  if (!notification) {
+    return;
+  }
+
+  notification.style.display = "block";
 
 
-
-function updateCounter(){
-
-document.getElementById("stickerCount").innerHTML =
-stickers.length;
-
+  setTimeout(() => {
+    notification.style.display = "none";
+  }, 3500);
 }
 
 
+// ==========================
+// PLAATS ZOEKEN
+// ==========================
+
+async function searchPlace() {
+  const input = document.getElementById("search");
+
+  if (!input) {
+    return;
+  }
+
+  const q = input.value.trim();
+
+  if (!q) {
+    return;
+  }
 
 
-function closeModal(){
+  try {
+    const response = await fetch(
+      "https://nominatim.openstreetmap.org/search" +
+      "?format=json" +
+      "&countrycodes=nl" +
+      "&limit=5" +
+      "&q=" +
+      encodeURIComponent(q)
+    );
 
-document.getElementById("modal").style.display="none";
 
-document.getElementById("modalBackground").style.display="none";
+    if (!response.ok) {
+      throw new Error(
+        `HTTP-fout: ${response.status}`
+      );
+    }
 
-selectedLat=null;
-selectedLng=null;
 
+    const data = await response.json();
+
+
+    if (data.length === 0) {
+      alert("Geen locatie gevonden.");
+      return;
+    }
+
+
+    const result = data[0];
+
+
+    const lat = Number(result.lat);
+    const lon = Number(result.lon);
+
+
+    if (
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lon)
+    ) {
+      alert("Ongeldige locatie ontvangen.");
+      return;
+    }
+
+
+    map.setView(
+      [lat, lon],
+      14
+    );
+
+  } catch (error) {
+    console.error(
+      "Fout bij zoeken:",
+      error
+    );
+
+    alert(
+      "Er ging iets mis bij het zoeken naar de locatie."
+    );
+  }
 }
 
 
+// ==========================
+// ENTER = ZOEKEN
+// ==========================
+
+document
+  .getElementById("search")
+  ?.addEventListener("keydown", (event) => {
+
+    if (event.key === "Enter") {
+      event.preventDefault();
+      searchPlace();
+    }
+
+  });
 
 
-function showNotification(){
+// ==========================
+// HTML VEILIG MAKEN
+// ==========================
 
-let n=document.getElementById("notification");
+function escapeHtml(value) {
+  const div = document.createElement("div");
 
-n.style.display="block";
+  div.textContent = String(value);
 
-
-setTimeout(()=>{
-
-n.style.display="none";
-
-},3500);
-
-}
-
-
-
-
-
-function searchPlace(){
-
-let q =
-document.getElementById("search").value;
-
-
-fetch(
-"https://nominatim.openstreetmap.org/search?format=json&countrycodes=nl&q="
-+
-encodeURIComponent(q)
-
-)
-
-.then(r=>r.json())
-
-.then(data=>{
-
-if(data.length){
-
-map.setView(
-[
-Number(data[0].lat),
-Number(data[0].lon)
-],
-14
-);
-
-}
-
-});
-
-}
-
-
-
-
-
-function escapeHtml(text){
-
-let div=document.createElement("div");
-
-div.textContent=text;
-
-return div.innerHTML;
-
+  return div.innerHTML;
 }
