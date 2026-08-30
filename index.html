@@ -1,348 +1,867 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Stickerkaart Nederland</title>
 
-<link rel="stylesheet"
-href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link
+rel="stylesheet"
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
 
 <style>
+
+/* =========================
+   BASIS
+========================= */
+
 * {
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f3f4f6;
+  padding: 0;
+
+  width: 100%;
+  height: 100%;
+
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Arial,
+    sans-serif;
+
+  background: #f5f5f7;
 }
 
-/* BOVENBALK */
+
+/* =========================
+   BOVENBALK
+========================= */
 
 #topbar {
+
   height: 65px;
+
   background: white;
 
   display: flex;
+
   align-items: center;
+
   gap: 10px;
 
   padding: 10px 15px;
 
-  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+  box-shadow:
+    0 2px 10px rgba(0,0,0,.12);
 
   position: relative;
+
   z-index: 3000;
 }
 
+
 #logo {
+
   font-size: 20px;
-  font-weight: bold;
+
+  font-weight: 700;
+
   white-space: nowrap;
+
 }
 
+
 #search {
+
   flex: 1;
+
+  min-width: 80px;
 
   padding: 11px 14px;
 
-  border: 1px solid #ccc;
-  border-radius: 9px;
+  border: 1px solid #d2d2d7;
+
+  border-radius: 10px;
 
   font-size: 15px;
+
+  outline: none;
+
 }
 
+
+#search:focus {
+
+  border-color: #007aff;
+
+  box-shadow:
+    0 0 0 3px rgba(0,122,255,.12);
+
+}
+
+
 #searchBtn {
+
   border: none;
 
-  background: #1976d2;
+  background: #007aff;
+
   color: white;
 
   padding: 11px 16px;
 
-  border-radius: 9px;
+  border-radius: 10px;
 
   cursor: pointer;
+
+  font-weight: 600;
+
 }
 
+
+#searchBtn:hover {
+
+  background: #0066d6;
+
+}
+
+
+/* =========================
+   PLUS KNOP
+========================= */
+
 #addBtn {
+
   width: 45px;
+
   height: 45px;
 
   border: none;
+
   border-radius: 50%;
 
-  background: #1976d2;
+  background: #007aff;
+
   color: white;
 
   font-size: 30px;
 
+  line-height: 45px;
+
   cursor: pointer;
+
+  box-shadow:
+    0 3px 8px rgba(0,0,0,.2);
+
 }
 
-/* TELLER */
+
+#addBtn:hover {
+
+  transform: scale(1.05);
+
+}
+
+
+/* =========================
+   TELLER
+========================= */
 
 #counter {
+
   position: fixed;
 
-  top: 80px;
+  top: 78px;
+
   right: 15px;
 
   z-index: 2000;
 
-  background: white;
+  background: rgba(255,255,255,.96);
 
   padding: 12px 17px;
 
-  border-radius: 12px;
+  border-radius: 13px;
 
-  box-shadow: 0 3px 12px rgba(0,0,0,.25);
+  box-shadow:
+    0 4px 15px rgba(0,0,0,.2);
 
-  font-weight: bold;
+  font-weight: 700;
+
+  backdrop-filter: blur(10px);
+
 }
 
-/* KAART */
+
+/* =========================
+   KAART
+========================= */
 
 #map {
+
   width: 100%;
-  height: calc(100vh - 65px);
+
+  height:
+    calc(100vh - 65px);
+
 }
 
-/* MIDDEN KRUIS */
+
+/* =========================
+   CENTRUM KRUIS
+========================= */
 
 #centerMarker {
+
   display: none;
 
   position: fixed;
 
   left: 50%;
-  top: 50%;
 
-  transform: translate(-50%, -50%);
+  top: calc(50% + 32px);
+
+  transform:
+    translate(-50%, -50%);
 
   z-index: 1500;
 
   pointer-events: none;
 
-  color: red;
+  color: #ff3b30;
 
   font-size: 48px;
 
+  font-weight: 400;
+
   text-shadow:
-    0 0 5px white,
+    0 0 4px white,
     0 0 10px white;
+
 }
 
-/* PLAATS BAR */
+
+/* =========================
+   PLAATSINGSBALK
+========================= */
 
 #placeBar {
+
   display: none;
 
   position: fixed;
 
   left: 50%;
+
   bottom: 20px;
 
-  transform: translateX(-50%);
+  transform:
+    translateX(-50%);
 
   z-index: 4000;
 
-  background: white;
+  background:
+    rgba(255,255,255,.97);
 
-  padding: 13px;
+  padding: 14px;
 
-  border-radius: 14px;
+  border-radius: 16px;
 
-  box-shadow: 0 5px 25px rgba(0,0,0,.3);
+  box-shadow:
+    0 8px 35px rgba(0,0,0,.25);
 
   text-align: center;
+
+  backdrop-filter: blur(15px);
+
 }
 
+
+#placeBarText {
+
+  font-size: 14px;
+
+  margin-bottom: 7px;
+
+  color: #444;
+
+}
+
+
 #placeBar button {
+
   border: none;
 
   padding: 11px 16px;
 
   margin: 4px;
 
-  border-radius: 8px;
+  border-radius: 9px;
 
   cursor: pointer;
 
-  font-weight: bold;
+  font-weight: 700;
+
 }
+
 
 #placeHere {
-  background: #16a34a;
+
+  background: #34c759;
+
   color: white;
+
 }
+
+
+#placeHere:hover {
+
+  background: #28a745;
+
+}
+
 
 #cancelPlace {
-  background: #ddd;
+
+  background: #e5e5ea;
+
+  color: #222;
+
 }
 
-/* STICKER */
+
+/* =========================
+   STICKER
+========================= */
 
 .sticker {
-  width: 60px;
-  height: 60px;
 
-  background: #ffe600;
+  width: 62px;
 
-  border: 3px solid #c5b400;
+  height: 62px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fff500,
+      #ffd900
+    );
+
+  border:
+    3px solid #c7ad00;
 
   border-radius: 50%;
 
   display: flex;
 
   align-items: center;
+
   justify-content: center;
 
-  padding: 6px;
+  padding: 7px;
 
   text-align: center;
 
   font-size: 12px;
-  font-weight: bold;
+
+  font-weight: 800;
 
   color: #222;
 
-  box-shadow: 0 4px 10px rgba(0,0,0,.35);
+  box-shadow:
+    0 4px 12px rgba(0,0,0,.35);
 
   overflow: hidden;
 
   word-break: break-word;
+
+  transition:
+    transform .15s ease;
+
 }
 
-/* MELDING */
+
+.sticker:hover {
+
+  transform: scale(1.12);
+
+}
+
+
+/* =========================
+   NOTIFICATIE
+========================= */
 
 #notification {
+
   display: none;
 
   position: fixed;
 
   top: 75px;
+
   right: 20px;
 
   z-index: 10000;
 
-  background: #222;
+  background: #1c1c1e;
 
   color: white;
 
   padding: 15px 20px;
 
-  border-radius: 13px;
+  border-radius: 14px;
 
-  box-shadow: 0 5px 20px rgba(0,0,0,.35);
+  box-shadow:
+    0 6px 25px rgba(0,0,0,.3);
 
-  font-weight: bold;
+  font-weight: 700;
+
 }
 
-/* MODAL */
+
+/* =========================
+   MODAL ACHTERGROND
+========================= */
 
 #modalBackground {
+
   display: none;
 
   position: fixed;
 
   inset: 0;
 
-  background: rgba(0,0,0,.45);
+  background:
+    rgba(0,0,0,.45);
 
   z-index: 5000;
+
+  backdrop-filter:
+    blur(5px);
+
 }
 
+
+/* =========================
+   MODAL
+========================= */
+
 #modal {
+
   display: none;
 
   position: fixed;
 
   left: 50%;
+
   top: 50%;
 
-  transform: translate(-50%, -50%);
+  transform:
+    translate(-50%, -50%);
 
-  width: 330px;
+  width: min(330px, 90%);
 
   background: white;
 
-  padding: 22px;
+  padding: 24px;
 
-  border-radius: 15px;
+  border-radius: 20px;
 
   z-index: 5001;
 
-  box-shadow: 0 10px 40px rgba(0,0,0,.4);
+  box-shadow:
+    0 15px 50px rgba(0,0,0,.35);
+
 }
 
-#modal input {
+
+#modal h2 {
+
+  margin-top: 0;
+
+}
+
+
+#stickerText {
+
   width: 100%;
 
-  padding: 12px;
+  padding: 13px;
 
-  border: 1px solid #ccc;
+  border: 1px solid #d2d2d7;
 
-  border-radius: 8px;
+  border-radius: 10px;
 
   font-size: 16px;
+
+  outline: none;
+
 }
 
+
+#stickerText:focus {
+
+  border-color: #007aff;
+
+}
+
+
 .modalButtons {
+
   display: flex;
 
   gap: 8px;
 
-  margin-top: 15px;
+  margin-top: 16px;
+
 }
+
 
 .modalButtons button {
+
   flex: 1;
 
-  padding: 11px;
+  padding: 12px;
 
   border: none;
 
-  border-radius: 8px;
+  border-radius: 10px;
 
   cursor: pointer;
 
-  font-weight: bold;
+  font-weight: 700;
+
 }
+
 
 #publish {
-  background: #1976d2;
+
+  background: #007aff;
+
   color: white;
+
 }
+
 
 #cancel {
-  background: #ddd;
+
+  background: #e5e5ea;
+
 }
 
+
+/* =========================
+   DELETE BUTTON
+========================= */
+
 .delete {
+
   width: 100%;
 
-  padding: 9px;
+  padding: 10px;
 
   border: none;
 
-  border-radius: 7px;
+  border-radius: 9px;
 
-  background: #e53935;
+  background: #ff3b30;
 
   color: white;
 
   cursor: pointer;
 
-  font-weight: bold;
+  font-weight: 700;
+
 }
+
+
+/* =========================
+   SAVE OVERLAY
+========================= */
+
+#saveOverlay {
+
+  display: none;
+
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 99999;
+
+  background:
+    rgba(255,255,255,.72);
+
+  backdrop-filter:
+    blur(18px);
+
+  align-items: center;
+
+  justify-content: center;
+
+}
+
+
+/* =========================
+   SAVE BOX
+========================= */
+
+#saveBox {
+
+  width: 300px;
+
+  padding: 32px 22px;
+
+  background:
+    rgba(255,255,255,.96);
+
+  border-radius: 28px;
+
+  text-align: center;
+
+  box-shadow:
+    0 20px 70px rgba(0,0,0,.22);
+
+  animation:
+    boxAppear .3s ease;
+
+}
+
+
+@keyframes boxAppear {
+
+  from {
+
+    opacity: 0;
+
+    transform:
+      scale(.92);
+
+  }
+
+  to {
+
+    opacity: 1;
+
+    transform:
+      scale(1);
+
+  }
+
+}
+
+
+/* =========================
+   SPINNER
+========================= */
+
+#loadingCircle {
+
+  width: 58px;
+
+  height: 58px;
+
+  margin:
+    0 auto 20px;
+
+  border-radius: 50%;
+
+  border:
+    5px solid #e5e5ea;
+
+  border-top-color:
+    #007aff;
+
+  animation:
+    spin .8s linear infinite;
+
+}
+
+
+@keyframes spin {
+
+  to {
+
+    transform:
+      rotate(360deg);
+
+  }
+
+}
+
+
+/* =========================
+   SAVE TEKST
+========================= */
+
+#saveTitle {
+
+  font-size: 19px;
+
+  font-weight: 700;
+
+  margin-bottom: 7px;
+
+}
+
+
+#saveSub {
+
+  font-size: 14px;
+
+  color: #777;
+
+}
+
+
+/* =========================
+   SUCCES ICOON
+========================= */
+
+#successIcon {
+
+  display: none;
+
+  width: 76px;
+
+  height: 76px;
+
+  margin:
+    0 auto 18px;
+
+  border-radius: 50%;
+
+  background: #34c759;
+
+  color: white;
+
+  font-size: 48px;
+
+  line-height: 76px;
+
+  font-weight: 700;
+
+  animation:
+    successPop .5s
+    cubic-bezier(.17,.67,.35,1.4);
+
+}
+
+
+@keyframes successPop {
+
+  0% {
+
+    transform:
+      scale(0);
+
+    opacity: 0;
+
+  }
+
+  70% {
+
+    transform:
+      scale(1.15);
+
+    opacity: 1;
+
+  }
+
+  100% {
+
+    transform:
+      scale(1);
+
+  }
+
+}
+
+
+/* =========================
+   SUCCES TEKST
+========================= */
+
+#successTitle {
+
+  display: none;
+
+  font-size: 21px;
+
+  font-weight: 800;
+
+}
+
+
+#successSub {
+
+  display: none;
+
+  margin-top: 8px;
+
+  color: #666;
+
+}
+
+
+/* =========================
+   MOBIEL
+========================= */
+
+@media (max-width: 600px) {
+
+  #logo {
+
+    display: none;
+
+  }
+
+  #searchBtn {
+
+    padding:
+      11px 12px;
+
+  }
+
+  #counter {
+
+    top: 75px;
+
+    right: 10px;
+
+    padding:
+      10px 13px;
+
+  }
+
+  #placeBar {
+
+    width: 92%;
+
+  }
+
+}
+
 </style>
+
 </head>
 
+
 <body>
+
+
+<!-- =========================
+     TOPBAR
+========================= -->
 
 <div id="topbar">
 
@@ -352,6 +871,7 @@ body {
 
   <input
     id="search"
+    type="text"
     placeholder="🔎 Zoek plaats..."
   >
 
@@ -365,12 +885,17 @@ body {
   <button
     id="addBtn"
     onclick="startPlacement()"
+    title="Sticker plaatsen"
   >
     +
   </button>
 
 </div>
 
+
+<!-- =========================
+     TELLER
+========================= -->
 
 <div id="counter">
 
@@ -380,18 +905,33 @@ body {
 </div>
 
 
+<!-- =========================
+     KAART
+========================= -->
+
 <div id="map"></div>
 
+
+<!-- =========================
+     CENTRUM KRUIS
+========================= -->
 
 <div id="centerMarker">
   ✚
 </div>
 
 
+<!-- =========================
+     PLAATSINGSBALK
+========================= -->
+
 <div id="placeBar">
 
-  <div>
-    📍 Zet het kruis op de gewenste plek
+  <div id="placeBarText">
+
+    📍 Versleep de kaart
+    totdat het kruis op de juiste plek staat.
+
   </div>
 
   <button
@@ -411,6 +951,10 @@ body {
 </div>
 
 
+<!-- =========================
+     NOTIFICATIE
+========================= -->
+
 <div id="notification">
 
   🔥 Sticker has been placed!<br>
@@ -419,12 +963,22 @@ body {
 </div>
 
 
+<!-- =========================
+     MODAL ACHTERGROND
+========================= -->
+
 <div id="modalBackground"></div>
 
 
+<!-- =========================
+     STICKER MODAL
+========================= -->
+
 <div id="modal">
 
-  <h2>🏷️ Sticker maken</h2>
+  <h2>
+    🏷️ Sticker maken
+  </h2>
 
   <p>
     Wat moet er op de sticker staan?
@@ -432,8 +986,9 @@ body {
 
   <input
     id="stickerText"
+    type="text"
     maxlength="40"
-    placeholder="Bijvoorbeeld: Heerenveen"
+    placeholder="Bijvoorbeeld: Heerenveen!"
   >
 
   <div class="modalButtons">
@@ -457,6 +1012,46 @@ body {
 </div>
 
 
+<!-- =========================
+     OPSLAAN ANIMATIE
+========================= -->
+
+<div id="saveOverlay">
+
+  <div id="saveBox">
+
+    <div id="loadingCircle"></div>
+
+    <div id="saveTitle">
+      Kaart wordt bijgewerkt...
+    </div>
+
+    <div id="saveSub">
+      Sticker wordt opgeslagen
+    </div>
+
+
+    <div id="successIcon">
+      ✓
+    </div>
+
+    <div id="successTitle">
+      Sticker opgeslagen
+    </div>
+
+    <div id="successSub">
+      🔥 sheesh!
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =========================
+     LEAFLET
+========================= -->
+
 <script
 src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
 </script>
@@ -464,11 +1059,16 @@ src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
 
 <script>
 
-/* KAART START OP HEERENVEEN */
+/* ==========================================
+   KAART
+========================================== */
 
-const map = L.map("map", {
-  doubleClickZoom: false
-}).setView(
+const map = L.map(
+  "map",
+  {
+    doubleClickZoom: false
+  }
+).setView(
   [52.9593, 5.9185],
   12
 );
@@ -477,63 +1077,85 @@ const map = L.map("map", {
 L.tileLayer(
   "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
   {
+
     maxZoom: 19,
 
     attribution:
       "&copy; OpenStreetMap contributors"
+
   }
 ).addTo(map);
 
 
-/* DATA */
+/* ==========================================
+   VARIABELEN
+========================================== */
 
 let stickers = [];
 
 let selectedLat = null;
+
 let selectedLng = null;
 
 
-/* DATA LADEN */
+/* ==========================================
+   OPSLAG LADEN
+========================================== */
 
 try {
 
-  stickers = JSON.parse(
+  const saved =
     localStorage.getItem(
       "stickerkaart"
-    ) || "[]"
-  );
+    );
 
-} catch {
+  if (saved) {
+
+    stickers =
+      JSON.parse(saved);
+
+  }
+
+} catch (error) {
 
   stickers = [];
 
 }
 
 
-/* PLUS */
+/* ==========================================
+   PLUS KNOP
+========================================== */
 
 function startPlacement() {
 
   document.getElementById(
     "centerMarker"
-  ).style.display = "block";
+  ).style.display =
+    "block";
+
 
   document.getElementById(
     "placeBar"
-  ).style.display = "block";
+  ).style.display =
+    "block";
 
 }
 
 
-/* LOCATIE */
+/* ==========================================
+   LOCATIE KIEZEN
+========================================== */
 
 function chooseLocation() {
 
   const center =
     map.getCenter();
 
+
   selectedLat =
     center.lat;
+
 
   selectedLng =
     center.lng;
@@ -541,60 +1163,85 @@ function chooseLocation() {
 
   document.getElementById(
     "centerMarker"
-  ).style.display = "none";
+  ).style.display =
+    "none";
+
 
   document.getElementById(
     "placeBar"
-  ).style.display = "none";
+  ).style.display =
+    "none";
 
 
   document.getElementById(
     "modalBackground"
-  ).style.display = "block";
+  ).style.display =
+    "block";
+
 
   document.getElementById(
     "modal"
-  ).style.display = "block";
+  ).style.display =
+    "block";
 
 
   document.getElementById(
     "stickerText"
-  ).value = "";
+  ).value =
+    "";
 
-  document.getElementById(
-    "stickerText"
-  ).focus();
+
+  setTimeout(
+    function() {
+
+      document.getElementById(
+        "stickerText"
+      ).focus();
+
+    },
+    100
+  );
 
 }
 
 
-/* ANNULEREN */
+/* ==========================================
+   PLAATSING ANNULEREN
+========================================== */
 
 function cancelPlacement() {
 
   document.getElementById(
     "centerMarker"
-  ).style.display = "none";
+  ).style.display =
+    "none";
+
 
   document.getElementById(
     "placeBar"
-  ).style.display = "none";
+  ).style.display =
+    "none";
 
 }
 
 
-/* PUBLICEREN */
+/* ==========================================
+   PUBLICEREN
+========================================== */
 
-function publishSticker() {
+async function publishSticker() {
 
   const input =
     document.getElementById(
       "stickerText"
     );
 
+
   const text =
     input.value.trim();
 
+
+  /* TEKST CONTROLEREN */
 
   if (!text) {
 
@@ -605,8 +1252,11 @@ function publishSticker() {
     input.focus();
 
     return;
+
   }
 
+
+  /* LOCATIE CONTROLEREN */
 
   if (
     selectedLat === null ||
@@ -618,13 +1268,92 @@ function publishSticker() {
     );
 
     return;
+
   }
 
+
+  /* OVERLAY OPENEN */
+
+  const overlay =
+    document.getElementById(
+      "saveOverlay"
+    );
+
+
+  const loading =
+    document.getElementById(
+      "loadingCircle"
+    );
+
+
+  const saveTitle =
+    document.getElementById(
+      "saveTitle"
+    );
+
+
+  const saveSub =
+    document.getElementById(
+      "saveSub"
+    );
+
+
+  const successIcon =
+    document.getElementById(
+      "successIcon"
+    );
+
+
+  const successTitle =
+    document.getElementById(
+      "successTitle"
+    );
+
+
+  const successSub =
+    document.getElementById(
+      "successSub"
+    );
+
+
+  overlay.style.display =
+    "flex";
+
+
+  loading.style.display =
+    "block";
+
+
+  saveTitle.style.display =
+    "block";
+
+
+  saveSub.style.display =
+    "block";
+
+
+  successIcon.style.display =
+    "none";
+
+
+  successTitle.style.display =
+    "none";
+
+
+  successSub.style.display =
+    "none";
+
+
+  /* NIEUWE STICKER */
 
   const sticker = {
 
     id:
-      Date.now().toString(),
+      Date.now().toString() +
+      "-" +
+      Math.random()
+        .toString(36)
+        .substring(2),
 
     text:
       text,
@@ -641,32 +1370,141 @@ function publishSticker() {
   };
 
 
-  stickers.push(sticker);
+  try {
+
+    /*
+      WACHT 5 SECONDEN
+      VOOR DE ANIMATIE
+    */
+
+    await wait(5000);
 
 
-  localStorage.setItem(
-    "stickerkaart",
-    JSON.stringify(stickers)
-  );
+    /* STICKER TOEVOEGEN */
+
+    stickers.push(
+      sticker
+    );
 
 
-  createSticker(sticker);
+    /* OPSLAAN */
+
+    localStorage.setItem(
+      "stickerkaart",
+      JSON.stringify(
+        stickers
+      )
+    );
 
 
-  updateCounter();
+    /* OP KAART ZETTEN */
+
+    createSticker(
+      sticker
+    );
 
 
-  closeModal();
+    /* TELLER */
+
+    updateCounter();
 
 
-  showNotification();
+    /* SPINNER VERBERGEN */
+
+    loading.style.display =
+      "none";
+
+
+    saveTitle.style.display =
+      "none";
+
+
+    saveSub.style.display =
+      "none";
+
+
+    /* SUCCES TONEN */
+
+    successIcon.style.display =
+      "block";
+
+
+    successTitle.style.display =
+      "block";
+
+
+    successSub.style.display =
+      "block";
+
+
+    /* SUCCES 2 SECONDEN */
+
+    await wait(2000);
+
+
+    /* OVERLAY SLUITEN */
+
+    overlay.style.display =
+      "none";
+
+
+    /* MODAL RESETTEN */
+
+    closeModal();
+
+
+    /* NOTIFICATIE */
+
+    showNotification();
+
+
+  } catch (error) {
+
+    console.error(
+      error
+    );
+
+
+    overlay.style.display =
+      "none";
+
+
+    alert(
+      "Er ging iets fout bij het opslaan."
+    );
+
+  }
 
 }
 
 
-/* STICKER */
+/* ==========================================
+   WACHTFUNCTIE
+========================================== */
 
-function createSticker(sticker) {
+function wait(milliseconds) {
+
+  return new Promise(
+    function(resolve) {
+
+      setTimeout(
+        resolve,
+        milliseconds
+      );
+
+    }
+  );
+
+}
+
+
+/* ==========================================
+   STICKER MAKEN
+========================================== */
+
+function createSticker(
+  sticker
+) {
 
   const icon =
     L.divIcon({
@@ -675,21 +1513,32 @@ function createSticker(sticker) {
 
       html:
         '<div class="sticker">' +
-        escapeHtml(sticker.text) +
+        escapeHtml(
+          sticker.text
+        ) +
         '</div>',
 
-      iconSize: [60,60],
+      iconSize:
+        [62,62],
 
-      iconAnchor: [30,30]
+      iconAnchor:
+        [31,31]
 
     });
 
 
   const marker =
     L.marker(
-      [sticker.lat, sticker.lng],
-      { icon: icon }
-    ).addTo(map);
+      [
+        sticker.lat,
+        sticker.lng
+      ],
+      {
+        icon:
+          icon
+      }
+    )
+    .addTo(map);
 
 
   const date =
@@ -702,76 +1551,110 @@ function createSticker(sticker) {
     date.toLocaleDateString(
       "nl-NL",
       {
-        day: "numeric",
-        month: "long",
-        year: "numeric"
+        day:
+          "numeric",
+
+        month:
+          "long",
+
+        year:
+          "numeric"
       }
     );
 
 
   marker.bindPopup(
 
-    "<div style='min-width:220px'>" +
+    '<div style="min-width:220px">' +
 
-    "<h3>🏷️ " +
-    escapeHtml(sticker.text) +
-    "</h3>" +
+      '<h3>🏷️ ' +
 
-    "<b>📍 Locatie</b><br>" +
+      escapeHtml(
+        sticker.text
+      ) +
 
-    sticker.lat.toFixed(5) +
-    ", " +
-    sticker.lng.toFixed(5) +
+      '</h3>' +
 
-    "<br><br>" +
+      '<b>📍 Locatie</b><br>' +
 
-    "<b>📅 Aangemaakt</b><br>" +
+      sticker.lat.toFixed(5) +
 
-    dateText +
+      ", " +
 
-    "<br><br>" +
+      sticker.lng.toFixed(5) +
 
-    "<button class='delete' " +
-    "onclick=\"deleteSticker('" +
-    sticker.id +
-    "')\">" +
+      '<br><br>' +
 
-    "🗑️ Deze sticker verwijderen" +
+      '<b>📅 Aangemaakt</b><br>' +
 
-    "</button>" +
+      dateText +
 
-    "</div>"
+      '<br><br>' +
+
+      '<button ' +
+
+      'class="delete" ' +
+
+      'onclick="deleteSticker(\'' +
+
+      sticker.id +
+
+      '\')">' +
+
+      '🗑️ Deze sticker verwijderen' +
+
+      '</button>' +
+
+    '</div>'
+
   );
 
 
-  sticker.marker = marker;
+  /*
+    MARKER AAN OBJECT KOPPELEN
+  */
+
+  sticker.marker =
+    marker;
 
 }
 
 
-/* VERWIJDEREN */
+/* ==========================================
+   STICKER VERWIJDEREN
+========================================== */
 
-function deleteSticker(id) {
+function deleteSticker(
+  id
+) {
 
   const index =
     stickers.findIndex(
-      sticker =>
-        sticker.id === id
+      function(sticker) {
+
+        return sticker.id === id;
+
+      }
     );
 
 
   if (index === -1) {
+
     return;
+
   }
 
 
-  if (
-    !confirm(
-      "Deze sticker verwijderen?"
-    )
-  ) {
+  const confirmed =
+    confirm(
+      "Wil je deze sticker verwijderen?"
+    );
+
+
+  if (!confirmed) {
 
     return;
+
   }
 
 
@@ -794,7 +1677,9 @@ function deleteSticker(id) {
 
   localStorage.setItem(
     "stickerkaart",
-    JSON.stringify(stickers)
+    JSON.stringify(
+      stickers
+    )
   );
 
 
@@ -803,7 +1688,9 @@ function deleteSticker(id) {
 }
 
 
-/* TELLER */
+/* ==========================================
+   TELLER
+========================================== */
 
 function updateCounter() {
 
@@ -815,7 +1702,9 @@ function updateCounter() {
 }
 
 
-/* MELDING */
+/* ==========================================
+   SUCCESMELDING
+========================================== */
 
 function showNotification() {
 
@@ -842,7 +1731,9 @@ function showNotification() {
 }
 
 
-/* MODAL SLUITEN */
+/* ==========================================
+   MODAL SLUITEN
+========================================== */
 
 function closeModal() {
 
@@ -851,88 +1742,134 @@ function closeModal() {
   ).style.display =
     "none";
 
+
   document.getElementById(
     "modalBackground"
   ).style.display =
     "none";
 
-  selectedLat = null;
-  selectedLng = null;
+
+  selectedLat =
+    null;
+
+
+  selectedLng =
+    null;
 
 }
 
 
-/* ZOEKEN */
+/* ==========================================
+   PLAATS ZOEKEN
+========================================== */
 
 function searchPlace() {
 
   const query =
-    document.getElementById(
-      "search"
-    ).value.trim();
+    document
+      .getElementById(
+        "search"
+      )
+      .value
+      .trim();
 
 
   if (!query) {
+
     return;
+
   }
 
 
   fetch(
     "https://nominatim.openstreetmap.org/search" +
+
     "?format=json" +
+
     "&countrycodes=nl" +
+
     "&limit=1" +
+
     "&q=" +
-    encodeURIComponent(query)
+
+    encodeURIComponent(
+      query
+    )
   )
 
-  .then(response =>
-    response.json()
+  .then(
+    function(response) {
+
+      return response.json();
+
+    }
   )
 
-  .then(data => {
+  .then(
+    function(data) {
 
-    if (!data.length) {
+      if (
+        !data ||
+        data.length === 0
+      ) {
 
-      alert(
-        "Plaats niet gevonden."
+        alert(
+          "Plaats niet gevonden."
+        );
+
+        return;
+
+      }
+
+
+      map.setView(
+        [
+          Number(
+            data[0].lat
+          ),
+
+          Number(
+            data[0].lon
+          )
+        ],
+        14
       );
 
-      return;
     }
+  )
 
+  .catch(
+    function(error) {
 
-    map.setView(
-      [
-        Number(data[0].lat),
-        Number(data[0].lon)
-      ],
-      14
-    );
+      console.error(
+        error
+      );
 
-  })
+      alert(
+        "Zoeken mislukt."
+      );
 
-  .catch(() => {
-
-    alert(
-      "Zoeken mislukt."
-    );
-
-  });
+    }
+  );
 
 }
 
 
-/* ENTER ZOEKEN */
+/* ==========================================
+   ENTER ZOEKEN
+========================================== */
 
 document
-  .getElementById("search")
+  .getElementById(
+    "search"
+  )
   .addEventListener(
     "keydown",
     function(event) {
 
       if (
-        event.key === "Enter"
+        event.key ===
+        "Enter"
       ) {
 
         searchPlace();
@@ -943,16 +1880,21 @@ document
   );
 
 
-/* ENTER PUBLICEREN */
+/* ==========================================
+   ENTER PUBLICEREN
+========================================== */
 
 document
-  .getElementById("stickerText")
+  .getElementById(
+    "stickerText"
+  )
   .addEventListener(
     "keydown",
     function(event) {
 
       if (
-        event.key === "Enter"
+        event.key ===
+        "Enter"
       ) {
 
         event.preventDefault();
@@ -961,31 +1903,61 @@ document
 
       }
 
+
+      if (
+        event.key ===
+        "Escape"
+      ) {
+
+        closeModal();
+
+      }
+
     }
   );
 
 
-/* VEILIGE TEKST */
+/* ==========================================
+   HTML VEILIG MAKEN
+========================================== */
 
-function escapeHtml(text) {
+function escapeHtml(
+  text
+) {
 
   const div =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
-  div.textContent = text;
+
+  div.textContent =
+    text;
+
 
   return div.innerHTML;
 
 }
 
 
-/* BESTAANDE STICKERS */
+/* ==========================================
+   BESTAANDE STICKERS
+========================================== */
 
 stickers.forEach(
-  sticker =>
-    createSticker(sticker)
+  function(sticker) {
+
+    createSticker(
+      sticker
+    );
+
+  }
 );
 
+
+/* ==========================================
+   TELLER BIJ START
+========================================== */
 
 updateCounter();
 
